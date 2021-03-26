@@ -1,5 +1,5 @@
 {
-    "name": "bringyourownideas/laravel-sitemap",
+    "name": "mrweb/laravel-sitemap",
     "description": "A simple website crawler & sitemap generator without a headless browser for Laravel 5.8+",
     "keywords": [
         "laravel",
@@ -17,7 +17,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Peter Thaleikis",
+            "name": "Mr. Web",
             "homepage": "https://peterthaleikis.com"
         }
     ],
