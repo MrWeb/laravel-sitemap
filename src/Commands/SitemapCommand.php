@@ -37,7 +37,7 @@ class SitemapCommand extends Command
         // Crawl the site
         $this->info('Starting site crawl...');
         $url       = $this->argument('url');
-        $resources = $this->crawlWebsite($url);
+        $resources = $this->crawlWebsite('https://www.' . $url);
 
         // Write the sitemap
         $this->info("Writing sitemap-{$url}.xml into public directory...");
