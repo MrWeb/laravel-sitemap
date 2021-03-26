@@ -178,7 +178,7 @@ class SitemapCommand extends Command
         try {
             file_put_contents(public_path() . "/sitemap-{$url_arg}.xml", $dom->saveXML());
         } catch (Exception $exception) {
-            $this->error("Failed to write sitemap.xml: {$exception->getMessage()}.");
+            $this->error("Failed to write sitemap-{$url_arg}.xml: {$exception->getMessage()}.");
         }
     }
 }
