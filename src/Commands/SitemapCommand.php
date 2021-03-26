@@ -2,25 +2,25 @@
 
 namespace BringYourOwnIdeas\LaravelSitemap\Commands;
 
-use Exception;
-use DOMDocument;
-use SimpleXMLElement;
 use Carbon\Carbon;
+use DOMDocument;
+use Exception;
 use Illuminate\Console\Command;
-use Symfony\Component\EventDispatcher\Event;
+use SimpleXMLElement;
 use Spatie\Robots\Robots;
-use VDB\Spider\Event\SpiderEvents;
-use VDB\Spider\StatsHandler;
-use VDB\Spider\Spider;
+use Symfony\Component\EventDispatcher\Event;
 use VDB\Spider\Discoverer\XPathExpressionDiscoverer;
+use VDB\Spider\Event\SpiderEvents;
 use VDB\Spider\Filter\Prefetch\AllowedHostsFilter;
+use VDB\Spider\Spider;
+use VDB\Spider\StatsHandler;
 
 class SitemapCommand extends Command
 {
     /**
      * @var string
      */
-    protected $signature = 'sitemap:generate';
+    protected $signature = 'sitemap:generate {url}';
 
     /**
      * @var string
@@ -36,16 +36,16 @@ class SitemapCommand extends Command
     {
         // Crawl the site
         $this->info('Starting site crawl...');
-        $resources = $this->crawlWebsite(env('APP_URL'));
+        $url       = $this->argument('url');
+        $resources = $this->crawlWebsite($url);
 
         // Write the sitemap
-        $this->info('Writing sitemap.xml into public directory...');
-        $this->writeSitemap($resources);
+        $this->info("Writing sitemap-{$url}.xml into public directory...");
+        $this->writeSitemap($url, $resources);
 
         // Signal completion
         $this->info('Sitemap generation completed.');
     }
-
 
     /**
      * Crawler over the website.
@@ -56,8 +56,8 @@ class SitemapCommand extends Command
     protected function crawlWebsite($url)
     {
         // Load the robots.txt from the site.
-        $robots_url = env('APP_URL') . '/robots.txt';
-        $robots = Robots::create()->withTxt($robots_url);
+        $robots_url = $url . '/robots.txt';
+        $robots     = Robots::create()->withTxt($robots_url);
         $this->info('Loading robots.txt from ' . $robots_url);
 
         // Create Spider
@@ -69,7 +69,7 @@ class SitemapCommand extends Command
         $spider->getDiscovererSet()->addFilter(new AllowedHostsFilter([$url], true));
 
         // Set limits
-        $spider->getDiscovererSet()->maxDepth = 25;
+        $spider->getDiscovererSet()->maxDepth    = 25;
         $spider->getQueueManager()->maxQueueSize = 1000;
 
         // Let's add something to enable us to stop the script
@@ -147,7 +147,7 @@ class SitemapCommand extends Command
      * @param array $resources
      * @return void
      **/
-    protected function writeSitemap($resources)
+    protected function writeSitemap($url_arg, $resources)
     {
         // Prepare XML
         $urlset = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://www.sitemaps.org/schemas/sitemap/0.9 https://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"></urlset>');
@@ -169,14 +169,14 @@ class SitemapCommand extends Command
         }
 
         // Beautify XML (actually not needed, but neat)
-        $dom = new DOMDocument;
+        $dom                     = new DOMDocument;
         $dom->preserveWhiteSpace = false;
         $dom->loadXML($urlset->asXML());
         $dom->formatOutput = true;
 
         // Write file
         try {
-            file_put_contents(public_path() . '/sitemap.xml', $dom->saveXML());
+            file_put_contents(public_path() . "/sitemap-{$url_arg}.xml", $dom->saveXML());
         } catch (Exception $exception) {
             $this->error("Failed to write sitemap.xml: {$exception->getMessage()}.");
         }
